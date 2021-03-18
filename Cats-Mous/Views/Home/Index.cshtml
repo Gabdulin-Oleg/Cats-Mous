@@ -1,0 +1,20 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Cats-Mous</title>
+</head>
+<body>
+    <h3>Добро пожаловать в благотвроительный фонд «Кошки-Мышки»</h3>
+    <a href="/Home/Donate">Сделать пожертвование</a>
+
+    <p>Лента :</p>
+    @foreach(var item in ViewBag.AllOrders)
+    {
+        <p>@item.Description    @item.Amount TMT </p>
+    }
+
+
+</body>
+</html>
