@@ -31,7 +31,7 @@ namespace Cats_Mous
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-            }         
+            }
             
             app.UseStaticFiles();
 

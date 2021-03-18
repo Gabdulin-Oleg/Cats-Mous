@@ -32,8 +32,9 @@ namespace Cats_Mous.DBCats_Mous
 
         public static async Task<Order> RegistredOrder(Order order)
         {
-
-            string urlRegisterd= "payment/rest/register.do";
+            
+            
+            string urlRegisterd= "https://localhost:44369/payment/rest/register.do";
             order.OrderNumber = order.Id.ToString();
             order.ReturnUrl = $"/Home/PaymentСonfirmation?orderNumber={order.Id}";
 

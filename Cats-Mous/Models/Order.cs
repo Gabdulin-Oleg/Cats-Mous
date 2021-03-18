@@ -22,7 +22,7 @@ namespace Cats_Mous.Models
         {
             UserName = "client7";
             Password = ReceivingPassword(UserName);
-            failUrl = "/Home/Error";
+            failUrl = "https://localhost:44369/Home/Error";
         }
         public static string ReceivingPassword(string username)
         {
