@@ -1,4 +1,6 @@
-﻿using Cats_Mous.Models;
+﻿using Cats_Mous.Interdaces;
+using Cats_Mous.Models;
+using Cats_Mous.Repository;
 using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Net.Http;
@@ -10,18 +12,36 @@ using System.Threading.Tasks;
 
 namespace Cats_Mous.DBCats_Mous
 {
-    public static class SettingOrder
+    public class SettingOrder : ISettingOrder
     {
-       
+        private IRepository operationDB;
 
-        public static async Task<string> ServeRequest(Order order, string UrlAddress)
+        public SettingOrder()
+        {
+            operationDB = new Operations();
+        }
+        public async Task<string> ServeRequest(FormRegistrationIdOrder idOrder, string UrlAddress)
         {
             using (HttpClient client = new HttpClient()
             {
                 BaseAddress = new Uri($" http://attest.turkmen-tranzit.com")
             })
             {
-                var answer = await client.PostAsJsonAsync($"{client.BaseAddress}{UrlAddress}", order);
+                var answer = await client.PostAsJsonAsync($"{client.BaseAddress}{UrlAddress}", idOrder);
+
+                var jsonAnswer = await answer.Content.ReadAsStringAsync();
+
+                return jsonAnswer;
+            }
+        }
+        public async Task<string> ServeRequest(RequestStatusOrder requestStatus, string UrlAddress)
+        {
+            using (HttpClient client = new HttpClient()
+            {
+                BaseAddress = new Uri($" http://attest.turkmen-tranzit.com")
+            })
+            {
+                var answer = await client.PostAsJsonAsync($"{client.BaseAddress}{UrlAddress}", requestStatus);
 
                 var jsonAnswer = await answer.Content.ReadAsStringAsync();
 
@@ -30,55 +50,51 @@ namespace Cats_Mous.DBCats_Mous
         }
 
 
-        public static async Task<Order> RegistredOrder(Order order)
+        public async Task<IdOrder> RegistredOrder(Order order)
         {
-            
-            
-            string urlRegisterd= "https://localhost:44369/payment/rest/register.do";
-            order.OrderNumber = order.Id.ToString();
-            order.ReturnUrl = $"/Home/PaymentСonfirmation?orderNumber={order.Id}";
+            string urlRegisterd = "payment/rest/register.do";
 
-            IdOrder IdOrder = JsonSerializer.Deserialize<IdOrder>(await ServeRequest(order, urlRegisterd));
-            order.errorCode = IdOrder.errorCode;
-            order.errorMessage = IdOrder.errorMessage;
-            order.orderId = IdOrder.orderId;
-            order.formUrl = IdOrder.formUrl;
+            operationDB.Creat(order);
+            order.orderNumber = order.Id.ToString();
+            FormRegistrationIdOrder registrationIdOrder = new FormRegistrationIdOrder(order);
 
-            return order;
+            IdOrder idOrder = JsonSerializer.Deserialize<IdOrder>(await ServeRequest(registrationIdOrder, urlRegisterd));
+            order.orderId = idOrder.orderId;
+            operationDB.UpDate(order);
+
+            return idOrder;
 
         }
-        public static async Task ChekStatusAsync(Order order)
+        public async Task ChekStatusAsync(Order order)
         {
             string urlChecStatus = "payment/rest/getOrderStatus.do";
+            RequestStatusOrder requestStatus = new RequestStatusOrder(order);
+            StatusOrder status = JsonSerializer.Deserialize<StatusOrder>(await ServeRequest(requestStatus, urlChecStatus));
 
-            Status status = JsonSerializer.Deserialize<Status>(await ServeRequest(order, urlChecStatus));
-
-            order.OrderStatus = status.OrderStatus;
+            order.OrderStatus = status.orderStatus;
 
             switch (order.OrderStatus)
             {
-                case 0:
+                case (int?)EnumOrderStatus.RegisteredButNotPaid:
                     {
-                        Thread.Sleep(60000);
-                        order.OrderStatus = 2;
+                        Thread.Sleep(60000);                        
                         await ChekStatusAsync(order);
                         break;
                     }
 
-                case 2:
+                case (int?)EnumOrderStatus.SuccessfullyPaid:
                     {
-                        Operations.UpDate(order);
+                        operationDB.UpDate(order);
                         break;
                     }
-                case 3:
+                case (int?)EnumOrderStatus.AuthorizationCanceled:
                     {
-                        Operations.Delete(order);
+                        operationDB.Delete(order);
                         break;
                     }
-                case 7:
+                case (int?)EnumOrderStatus.OrderIsBeingProcessed:
                     {
-                        Thread.Sleep(10000);
-                        order.OrderStatus = 2;
+                        Thread.Sleep(10000);                       
                         await ChekStatusAsync(order);
                         break;
                     }

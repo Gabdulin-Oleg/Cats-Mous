@@ -1,5 +1,11 @@
-﻿namespace Cats_Mous.Models
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Cats_Mous.Models
 {
+    //Форма получения ID заказа в системк оплаты
     public class IdOrder
     {
         public string orderId { get; set; }

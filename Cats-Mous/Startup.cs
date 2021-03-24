@@ -1,6 +1,10 @@
+using Cats_Mous.DBCats_Mous;
+using Cats_Mous.Interdaces;
+using Cats_Mous.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,8 +27,12 @@ namespace Cats_Mous
         
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            string conection = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<Context>(opt => opt.UseSqlServer(conection).EnableSensitiveDataLogging(true));
+            //services.AddScoped<IRepository, Operations>();
+            //services.AddTransient<ISettingOrder, SettingOrder>();
 
+            services.AddControllersWithViews();
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
@@ -41,7 +49,7 @@ namespace Cats_Mous
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=HomePage}/{action=Index}/{id?}");
             });
         }
     }
